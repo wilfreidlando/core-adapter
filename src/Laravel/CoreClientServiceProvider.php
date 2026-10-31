@@ -26,6 +26,7 @@ use CoreAdapter\Webhooks\Receiver;
 use CoreAdapter\Webhooks\Signature;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -57,76 +58,89 @@ final class CoreClientServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/core.php', 'core');
 
+        // Laravel appelle une fermeture de liaison avec `($container, $parameters)` :
+        // le premier argument est **l'Application**, jamais la dépendance typée.
+        // On reçoit donc le conteneur et on résout soi-même ce qu'on construit.
         $this->app->singleton(
             CoreConfig::class,
-            fn (ConfigRepository $config): CoreConfig => $this->coreConfig($config),
+            fn (Application $app): CoreConfig => $this->coreConfig($app->make(ConfigRepository::class)),
         );
 
         // Le transport est celui de l'application : `Http::fake()`, les
         // intergiciels globaux et le proxy du projet s'appliquent.
         $this->app->bind(
             Transport::class,
-            fn (HttpFactory $factory, CoreConfig $config): Transport => new LaravelTransport(
-                $factory,
-                $config->timeout,
-                $config->connectTimeout,
-            ),
+            function (Application $app): Transport {
+                $config = $app->make(CoreConfig::class);
+
+                return new LaravelTransport(
+                    $app->make(HttpFactory::class),
+                    $config->timeout,
+                    $config->connectTimeout,
+                );
+            },
         );
 
         $this->app->singleton(
             CoreClient::class,
-            fn (CoreConfig $config, Transport $transport): CoreClient => new CoreClient($config, $transport),
+            fn (Application $app): CoreClient => new CoreClient(
+                $app->make(CoreConfig::class),
+                $app->make(Transport::class),
+            ),
         );
 
         $this->app->singleton(
             EventStore::class,
-            fn (CacheRepository $cache): EventStore => new CacheEventStore($cache),
+            fn (Application $app): EventStore => new CacheEventStore($app->make(CacheRepository::class)),
         );
 
         $this->app->singleton(
             EntitlementsCache::class,
-            fn (CacheRepository $cache, CoreConfig $config): EntitlementsCache => new CacheEntitlementsCache(
-                $cache,
-                $config->entitlementsTtl,
+            fn (Application $app): EntitlementsCache => new CacheEntitlementsCache(
+                $app->make(CacheRepository::class),
+                $app->make(CoreConfig::class)->entitlementsTtl,
             ),
         );
 
         $this->app->singleton(
             Signature::class,
-            fn (CoreConfig $config): Signature => new Signature($config->webhookTolerance),
+            fn (Application $app): Signature => new Signature($app->make(CoreConfig::class)->webhookTolerance),
         );
 
         $this->app->singleton(
             Receiver::class,
-            fn (Signature $signature, EventStore $events, CoreConfig $config): Receiver => new Receiver(
-                $signature,
-                $events,
-                $config->webhookSecret ?? '',
+            fn (Application $app): Receiver => new Receiver(
+                $app->make(Signature::class),
+                $app->make(EventStore::class),
+                $app->make(CoreConfig::class)->webhookSecret ?? '',
             ),
         );
 
-        $this->app->singleton(Customers::class, fn (CoreClient $client): Customers => new Customers($client));
+        $this->app->singleton(Customers::class, fn (Application $app): Customers => new Customers($app->make(CoreClient::class)));
 
         $this->app->singleton(
             Entitlements::class,
-            fn (CoreClient $client, EntitlementsCache $cache): Entitlements => new Entitlements($client, $cache),
-        );
-
-        $this->app->singleton(Usage::class, fn (CoreClient $client): Usage => new Usage($client));
-
-        $this->app->singleton(Portal::class, fn (CoreClient $client): Portal => new Portal($client));
-
-        $this->app->singleton(
-            Notifications::class,
-            fn (CoreClient $client, CoreConfig $config): Notifications => new Notifications(
-                $client,
-                $config->whatsappSession,
+            fn (Application $app): Entitlements => new Entitlements(
+                $app->make(CoreClient::class),
+                $app->make(EntitlementsCache::class),
             ),
         );
 
-        $this->app->singleton(Payments::class, fn (CoreClient $client): Payments => new Payments($client));
+        $this->app->singleton(Usage::class, fn (Application $app): Usage => new Usage($app->make(CoreClient::class)));
 
-        $this->app->singleton(Wallets::class, fn (CoreClient $client): Wallets => new Wallets($client));
+        $this->app->singleton(Portal::class, fn (Application $app): Portal => new Portal($app->make(CoreClient::class)));
+
+        $this->app->singleton(
+            Notifications::class,
+            fn (Application $app): Notifications => new Notifications(
+                $app->make(CoreClient::class),
+                $app->make(CoreConfig::class)->whatsappSession,
+            ),
+        );
+
+        $this->app->singleton(Payments::class, fn (Application $app): Payments => new Payments($app->make(CoreClient::class)));
+
+        $this->app->singleton(Wallets::class, fn (Application $app): Wallets => new Wallets($app->make(CoreClient::class)));
     }
 
     public function boot(): void
