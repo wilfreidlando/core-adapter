@@ -1,0 +1,17 @@
+parameters:
+    # Niveau 10 (le maximum) dès le premier jour : c'est une bibliothèque
+    # publique, et le code que les autres liront doit être strict.
+    level: 10
+
+    paths:
+        - src
+        - tests
+
+    tmpDir: .phpstan.cache
+
+    # Rien n'est « presque » d'un type : les charges utiles du Core sont
+    # décodées en `mixed`, et chaque accès est vérifié.
+    checkExplicitMixed: true
+    checkImplicitMixed: true
+    treatPhpDocTypesAsCertain: true
+    reportUnmatchedIgnoredErrors: true

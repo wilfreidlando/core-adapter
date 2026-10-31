@@ -1,0 +1,9 @@
+/vendor/
+/.phpunit.cache/
+/.phpstan.cache/
+/build/
+composer.lock
+
+# Outillage local de développement (PHP 8.3 + extensions, Composer) : il ne
+# fait pas partie de la bibliothèque et ne doit jamais être publié.
+/.tools/

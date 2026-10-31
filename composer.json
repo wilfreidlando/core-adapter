@@ -1,0 +1,56 @@
+{
+    "name": "wilfreidlando/saas-commerce-dep",
+    "description": "Le client PHP du Core : votre application reçoit son locataire, lit ses droits, compte son usage, ouvre son portail et reçoit ses événements. Aucun commerce.",
+    "keywords": ["core", "saas", "webhooks", "laravel", "client"],
+    "homepage": "https://github.com/wilfreidlando/saas-commerce-dep",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "wilfreidlando",
+            "homepage": "https://github.com/wilfreidlando"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^2.1",
+        "laravel/pint": "^1.18",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^11.0|^12.0|^13.0",
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "suggest": {
+        "ext-curl": "Requis par le transport curl du noyau — le transport par défaut hors Laravel."
+    },
+    "autoload": {
+        "psr-4": {
+            "SaasCommerce\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SaasCommerce\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SaasCommerce\\Laravel\\CoreClientServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "stan": "phpstan analyse",
+        "lint": "pint --test"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
