@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
-use SaasCommerce\Core\Webhooks\Event;
-use SaasCommerce\Core\Webhooks\InMemoryEventStore;
-use SaasCommerce\Core\Webhooks\InvalidSignatureException;
-use SaasCommerce\Core\Webhooks\Receiver;
-use SaasCommerce\Core\Webhooks\Signature;
-use SaasCommerce\Tests\TestCase;
+use CoreAdapter\Tests\TestCase;
+use CoreAdapter\Webhooks\Event;
+use CoreAdapter\Webhooks\InMemoryEventStore;
+use CoreAdapter\Webhooks\InvalidSignatureException;
+use CoreAdapter\Webhooks\Receiver;
+use CoreAdapter\Webhooks\Signature;
 
 /**
  * La réception : la signature d'abord, le dédoublonnage ensuite.

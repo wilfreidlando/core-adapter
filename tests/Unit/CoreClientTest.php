@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
+use CoreAdapter\Services\Payments;
+use CoreAdapter\Tests\TestCase;
 use InvalidArgumentException;
-use SaasCommerce\Core\Services\Payments;
-use SaasCommerce\Tests\TestCase;
 
 /**
  * La porte HTTP : le jeton, le `Accept`, et la clé d'idempotence.

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Console;
+namespace CoreAdapter\Laravel\Console;
 
+use CoreAdapter\CoreClient;
+use CoreAdapter\CoreConfig;
+use CoreAdapter\CoreException;
+use CoreAdapter\Scopes;
 use Illuminate\Console\Command;
-use SaasCommerce\Core\CoreClient;
-use SaasCommerce\Core\CoreConfig;
-use SaasCommerce\Core\CoreException;
-use SaasCommerce\Core\Scopes;
 
 /**
  * `php artisan core:check` — la commande qui dit si l'application est

@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel;
+namespace CoreAdapter\Laravel;
 
+use CoreAdapter\Contracts\EntitlementsCache;
+use CoreAdapter\Contracts\EventStore;
+use CoreAdapter\CoreClient;
+use CoreAdapter\CoreConfig;
+use CoreAdapter\Http\Transport;
+use CoreAdapter\Laravel\Cache\CacheEntitlementsCache;
+use CoreAdapter\Laravel\Cache\CacheEventStore;
+use CoreAdapter\Laravel\Console\CheckCommand;
+use CoreAdapter\Laravel\Events\CoreEventReceived;
+use CoreAdapter\Laravel\Http\LaravelTransport;
+use CoreAdapter\Laravel\Listeners\ApplyBillingEvent;
+use CoreAdapter\Services\Customers;
+use CoreAdapter\Services\Entitlements;
+use CoreAdapter\Services\Notifications;
+use CoreAdapter\Services\Payments;
+use CoreAdapter\Services\Portal;
+use CoreAdapter\Services\Usage;
+use CoreAdapter\Services\Wallets;
+use CoreAdapter\Webhooks\Receiver;
+use CoreAdapter\Webhooks\Signature;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
-use SaasCommerce\Core\Contracts\EntitlementsCache;
-use SaasCommerce\Core\Contracts\EventStore;
-use SaasCommerce\Core\CoreClient;
-use SaasCommerce\Core\CoreConfig;
-use SaasCommerce\Core\Http\Transport;
-use SaasCommerce\Core\Services\Customers;
-use SaasCommerce\Core\Services\Entitlements;
-use SaasCommerce\Core\Services\Notifications;
-use SaasCommerce\Core\Services\Payments;
-use SaasCommerce\Core\Services\Portal;
-use SaasCommerce\Core\Services\Usage;
-use SaasCommerce\Core\Services\Wallets;
-use SaasCommerce\Core\Webhooks\Receiver;
-use SaasCommerce\Core\Webhooks\Signature;
-use SaasCommerce\Laravel\Cache\CacheEntitlementsCache;
-use SaasCommerce\Laravel\Cache\CacheEventStore;
-use SaasCommerce\Laravel\Console\CheckCommand;
-use SaasCommerce\Laravel\Events\CoreEventReceived;
-use SaasCommerce\Laravel\Http\LaravelTransport;
-use SaasCommerce\Laravel\Listeners\ApplyBillingEvent;
 
 /**
  * Le collage Laravel du paquet client du Core.
@@ -48,7 +48,7 @@ use SaasCommerce\Laravel\Listeners\ApplyBillingEvent;
  * - la commande `core:check`.
  *
  * ```php
- * $rights = app(SaasCommerce\Core\Services\Entitlements::class)->get('auto-ecole-42');
+ * $rights = app(CoreAdapter\Services\Entitlements::class)->get('auto-ecole-42');
  * ```
  */
 final class CoreClientServiceProvider extends ServiceProvider

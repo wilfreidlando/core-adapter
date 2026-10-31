@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Cache;
+namespace CoreAdapter\Laravel\Cache;
 
+use CoreAdapter\Contracts\EventStore;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use SaasCommerce\Core\Contracts\EventStore;
 
 /**
  * Le magasin d'événements sur le cache de Laravel.
@@ -34,6 +34,6 @@ final class CacheEventStore implements EventStore
 
     private function key(string $eventId): string
     {
-        return 'saas_commerce:event:'.$eventId;
+        return 'core_adapter:event:'.$eventId;
     }
 }

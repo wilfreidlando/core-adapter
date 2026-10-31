@@ -11,7 +11,7 @@
          displayDetailsOnTestsThatTriggerWarnings="true"
          displayDetailsOnTestsThatTriggerErrors="true">
     <testsuites>
-        <testsuite name="saas-commerce-dep">
+        <testsuite name="core-adapter">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

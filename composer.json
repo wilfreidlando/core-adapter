@@ -1,8 +1,8 @@
 {
-    "name": "wilfreidlando/saas-commerce-dep",
+    "name": "wilfreidlando/core-adapter",
     "description": "Le client PHP du Core : votre application reçoit son locataire, lit ses droits, compte son usage, ouvre son portail et reçoit ses événements. Aucun commerce.",
-    "keywords": ["core", "saas", "webhooks", "laravel", "client"],
-    "homepage": "https://github.com/wilfreidlando/saas-commerce-dep",
+    "keywords": ["core", "core-adapter", "saas", "webhooks", "laravel", "client"],
+    "homepage": "https://github.com/wilfreidlando/core-adapter",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -28,18 +28,18 @@
     },
     "autoload": {
         "psr-4": {
-            "SaasCommerce\\": "src/"
+            "CoreAdapter\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "SaasCommerce\\Tests\\": "tests/"
+            "CoreAdapter\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "SaasCommerce\\Laravel\\CoreClientServiceProvider"
+                "CoreAdapter\\Laravel\\CoreClientServiceProvider"
             ]
         }
     },

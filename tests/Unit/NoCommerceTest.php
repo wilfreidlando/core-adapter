@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
+use CoreAdapter\ForbiddenMethods;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionMethod;
-use SaasCommerce\Core\ForbiddenMethods;
 use SplFileInfo;
 
 /**
@@ -90,7 +90,7 @@ final class NoCommerceTest extends TestCase
             }
 
             $relative = substr($file->getPathname(), strlen($root) + 1);
-            $class = 'SaasCommerce\\'.str_replace(['/', '.php'], ['\\', ''], $relative);
+            $class = 'CoreAdapter\\'.str_replace(['/', '.php'], ['\\', ''], $relative);
 
             if (class_exists($class)) {
                 $classes[] = $class;

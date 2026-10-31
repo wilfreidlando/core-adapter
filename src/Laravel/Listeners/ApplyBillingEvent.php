@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Listeners;
+namespace CoreAdapter\Laravel\Listeners;
 
-use SaasCommerce\Core\Contracts\EntitlementsCache;
-use SaasCommerce\Laravel\Events\CoreEventReceived;
+use CoreAdapter\Contracts\EntitlementsCache;
+use CoreAdapter\Laravel\Events\CoreEventReceived;
 
 /**
  * L'effet des événements du Core sur l'état **local** de votre application.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
-use SaasCommerce\Core\Services\Portal;
-use SaasCommerce\Tests\TestCase;
+use CoreAdapter\Services\Portal;
+use CoreAdapter\Tests\TestCase;
 
 /**
  * Le portail s'ouvre, et **rien d'autre**.

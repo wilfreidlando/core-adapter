@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Http;
+namespace CoreAdapter\Laravel\Http;
 
+use CoreAdapter\Http\Transport;
+use CoreAdapter\Http\TransportException;
+use CoreAdapter\Http\TransportResponse;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Response;
-use SaasCommerce\Core\Http\Transport;
-use SaasCommerce\Core\Http\TransportException;
-use SaasCommerce\Core\Http\TransportResponse;
 
 /**
  * Le transport du paquet sur le client HTTP de Laravel.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Cache;
+namespace CoreAdapter\Laravel\Cache;
 
+use CoreAdapter\Contracts\EntitlementsCache;
+use CoreAdapter\Dto\Entitlements;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use SaasCommerce\Core\Contracts\EntitlementsCache;
-use SaasCommerce\Core\Dto\Entitlements;
 
 /**
  * Le cache des droits, sur le cache de Laravel.
@@ -47,6 +47,6 @@ final class CacheEntitlementsCache implements EntitlementsCache
 
     private function key(string $customerRef): string
     {
-        return 'saas_commerce:entitlements:'.$customerRef;
+        return 'core_adapter:entitlements:'.$customerRef;
     }
 }

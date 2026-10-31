@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Http;
+namespace CoreAdapter\Laravel\Http;
 
+use CoreAdapter\Laravel\Events\CoreEventReceived;
+use CoreAdapter\Webhooks\Event;
+use CoreAdapter\Webhooks\InvalidSignatureException;
+use CoreAdapter\Webhooks\Receiver;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Request;
-use SaasCommerce\Core\Webhooks\Event;
-use SaasCommerce\Core\Webhooks\InvalidSignatureException;
-use SaasCommerce\Core\Webhooks\Receiver;
-use SaasCommerce\Laravel\Events\CoreEventReceived;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -27,7 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 final class CoreWebhookController
 {
     /** L'attribut de requête où le middleware dépose l'événement vérifié. */
-    public const EVENT_ATTRIBUTE = 'saas_commerce.core_event';
+    public const EVENT_ATTRIBUTE = 'core_adapter.core_event';
 
     public function __construct(
         private readonly Receiver $receiver,

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Events;
+namespace CoreAdapter\Laravel\Events;
 
 /**
  * Un événement du Core, vérifié et dédoublonné.

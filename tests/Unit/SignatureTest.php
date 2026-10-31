@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
-use SaasCommerce\Core\Webhooks\Signature;
-use SaasCommerce\Tests\TestCase;
+use CoreAdapter\Tests\TestCase;
+use CoreAdapter\Webhooks\Signature;
 
 /**
  * La signature d'un événement : HMAC-SHA256 de `timestamp.body`, avec une

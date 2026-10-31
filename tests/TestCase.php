@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests;
+namespace CoreAdapter\Tests;
 
+use CoreAdapter\CoreClient;
+use CoreAdapter\CoreConfig;
+use CoreAdapter\Tests\Fakes\FakeTransport;
 use PHPUnit\Framework\TestCase as BaseTestCase;
-use SaasCommerce\Core\CoreClient;
-use SaasCommerce\Core\CoreConfig;
-use SaasCommerce\Tests\Fakes\FakeTransport;
 
 /**
  * Le socle des tests : un client branché sur un faux transport.

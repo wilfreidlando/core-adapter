@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
-use SaasCommerce\Core\Services\Usage;
-use SaasCommerce\Tests\TestCase;
+use CoreAdapter\Services\Usage;
+use CoreAdapter\Tests\TestCase;
 
 /**
  * L'usage est la seule route dont la clé d'idempotence voyage **dans le

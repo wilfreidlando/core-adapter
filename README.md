@@ -1,4 +1,4 @@
-# saas-commerce-dep
+# core-adapter
 
 **Le client PHP du Core.** Votre application reçoit son locataire, lit ses droits,
 compte son usage, ouvre son portail et reçoit ses événements. Elle ne fait
@@ -6,9 +6,9 @@ compte son usage, ouvre son portail et reçoit ses événements. Elle ne fait
 
 Le paquet est le client officiel de l'API `/v1` du Core. Il contient :
 
-- un **noyau** sans framework (`SaasCommerce\Core`) : le client HTTP, le type
+- un **noyau** sans framework (`CoreAdapter`) : le client HTTP, le type
   d'erreur, la vérification de signature, et une classe par service ;
-- un **adaptateur Laravel** (`SaasCommerce\Laravel`) : le service provider
+- un **adaptateur Laravel** (`CoreAdapter\Laravel`) : le service provider
   (auto-découvert), le transport sur `Illuminate\Http\Client`, le contrôleur de
   webhook, le middleware, l'événement, l'écouteur et la commande
   `core:check`.
@@ -29,12 +29,12 @@ de votre application :
 ```json
 {
     "require": {
-        "wilfreidlando/saas-commerce-dep": "^1.0"
+        "wilfreidlando/core-adapter": "^1.0"
     },
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/wilfreidlando/saas-commerce-dep.git"
+            "url": "https://github.com/wilfreidlando/core-adapter.git"
         }
     ]
 }
@@ -43,7 +43,7 @@ de votre application :
 Puis :
 
 ```bash
-composer require wilfreidlando/saas-commerce-dep
+composer require wilfreidlando/core-adapter
 ```
 
 ### 2. Les trois clés
@@ -75,7 +75,7 @@ CSRF, pas de session : la sécurité, c'est la signature). Dans
 ```php
 ->withRouting(then: function () {
     Route::middleware('api')->group(
-        base_path('vendor/wilfreidlando/saas-commerce-dep/routes/core.php')
+        base_path('vendor/wilfreidlando/core-adapter/routes/core.php')
     );
 })
 ```
@@ -83,7 +83,7 @@ CSRF, pas de session : la sécurité, c'est la signature). Dans
 ou, dans `routes/api.php` (Laravel 10 et avant) :
 
 ```php
-require base_path('vendor/wilfreidlando/saas-commerce-dep/routes/core.php');
+require base_path('vendor/wilfreidlando/core-adapter/routes/core.php');
 ```
 
 ### 4. La vérification
@@ -126,7 +126,7 @@ l'événement `customer.created`, puis elle le lit quand elle a besoin de son
 e-mail pour le lier à son compte local.
 
 ```php
-use SaasCommerce\Core\Services\Customers;
+use CoreAdapter\Services\Customers;
 
 $customers = app(Customers::class);
 
@@ -145,7 +145,7 @@ locataire y est nommé par votre propre référence. C'est pourquoi l'identité 
 ### 2. Lire ses droits
 
 ```php
-use SaasCommerce\Core\Services\Entitlements;
+use CoreAdapter\Services\Entitlements;
 
 $entitlements = app(Entitlements::class)->get('auto-ecole-42');
 
@@ -162,7 +162,7 @@ pour désactiver), et le cache est vidé dès qu'un événement `subscription.*`
 ### 3. Compter son usage
 
 ```php
-use SaasCommerce\Core\Services\Usage;
+use CoreAdapter\Services\Usage;
 
 $usage = app(Usage::class);
 
@@ -190,7 +190,7 @@ Une clé par fait, jamais par requête.
 ### 4. Ouvrir le portail
 
 ```php
-use SaasCommerce\Core\Services\Portal;
+use CoreAdapter\Services\Portal;
 
 $session = app(Portal::class)->open('auto-ecole-42');
 
@@ -212,7 +212,7 @@ l'`id` de l'événement, puis vous transmet un événement Laravel :
 
 ```php
 use Illuminate\Support\Facades\Event;
-use SaasCommerce\Laravel\Events\CoreEventReceived;
+use CoreAdapter\Laravel\Events\CoreEventReceived;
 
 Event::listen(CoreEventReceived::class, function (CoreEventReceived $event): void {
     if ($event->type === 'customer.created') {
@@ -245,7 +245,7 @@ disponibles dans le conteneur comme les autres.
 ### Notifications — les applications qui envoient des WhatsApp
 
 ```php
-use SaasCommerce\Core\Services\Notifications;
+use CoreAdapter\Services\Notifications;
 
 $notifications = app(Notifications::class);
 
@@ -271,7 +271,7 @@ WhatsApp est celle que l'opérateur du Core a liée à votre projet
 ### Payments — les applications qui encaissent
 
 ```php
-use SaasCommerce\Core\Services\Payments;
+use CoreAdapter\Services\Payments;
 
 $payments = app(Payments::class);
 
@@ -294,7 +294,7 @@ Rien n'est certain avant l'événement `payment.status_changed` avec
 ### Wallets — les applications qui gèrent un portefeuille
 
 ```php
-use SaasCommerce\Core\Services\Wallets;
+use CoreAdapter\Services\Wallets;
 
 $wallets = app(Wallets::class);
 
@@ -379,10 +379,10 @@ chaque règle, est dans le guide du Core :
 Le noyau ne dépend d'aucun framework. Vous construisez le client vous-même :
 
 ```php
-use SaasCommerce\Core\CoreClient;
-use SaasCommerce\Core\CoreConfig;
-use SaasCommerce\Core\Http\CurlTransport;
-use SaasCommerce\Core\Services\Portal;
+use CoreAdapter\CoreClient;
+use CoreAdapter\CoreConfig;
+use CoreAdapter\Http\CurlTransport;
+use CoreAdapter\Services\Portal;
 
 $client = new CoreClient(
     new CoreConfig(

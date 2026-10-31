@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Laravel\Middleware;
+namespace CoreAdapter\Laravel\Middleware;
 
 use Closure;
+use CoreAdapter\Laravel\Http\CoreWebhookController;
+use CoreAdapter\Webhooks\InvalidSignatureException;
+use CoreAdapter\Webhooks\Receiver;
 use Illuminate\Http\Request;
-use SaasCommerce\Core\Webhooks\InvalidSignatureException;
-use SaasCommerce\Core\Webhooks\Receiver;
-use SaasCommerce\Laravel\Http\CoreWebhookController;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

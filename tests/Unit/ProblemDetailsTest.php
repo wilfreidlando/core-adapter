@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Unit;
+namespace CoreAdapter\Tests\Unit;
 
-use SaasCommerce\Core\CoreException;
-use SaasCommerce\Core\Http\TransportResponse;
-use SaasCommerce\Core\Services\Usage;
-use SaasCommerce\Tests\TestCase;
+use CoreAdapter\CoreException;
+use CoreAdapter\Http\TransportResponse;
+use CoreAdapter\Services\Usage;
+use CoreAdapter\Tests\TestCase;
 
 /**
  * Le refus du Core, en RFC 7807, devient une `CoreException` qui dit ce qu'il

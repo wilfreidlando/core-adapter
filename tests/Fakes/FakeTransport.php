@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SaasCommerce\Tests\Fakes;
+namespace CoreAdapter\Tests\Fakes;
 
+use CoreAdapter\Http\Transport;
+use CoreAdapter\Http\TransportResponse;
 use LogicException;
-use SaasCommerce\Core\Http\Transport;
-use SaasCommerce\Core\Http\TransportResponse;
 
 /**
  * Un transport qui ne sort jamais de la machine : il enregistre les requêtes

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use CoreAdapter\Laravel\Http\CoreWebhookController;
+use CoreAdapter\Laravel\Middleware\VerifyCoreSignature;
 use Illuminate\Support\Facades\Route;
-use SaasCommerce\Laravel\Http\CoreWebhookController;
-use SaasCommerce\Laravel\Middleware\VerifyCoreSignature;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,16 +18,16 @@ use SaasCommerce\Laravel\Middleware\VerifyCoreSignature;
 |
 |     ->withRouting(then: function () {
 |         Route::middleware('api')->group(
-|             base_path('vendor/wilfreidlando/saas-commerce-dep/routes/core.php')
+|             base_path('vendor/wilfreidlando/core-adapter/routes/core.php')
 |         );
 |     })
 |
 | ou, dans `routes/api.php` (Laravel 10 et avant) :
 |
-|     require base_path('vendor/wilfreidlando/saas-commerce-dep/routes/core.php');
+|     require base_path('vendor/wilfreidlando/core-adapter/routes/core.php');
 |
 */
 
 Route::post('/webhooks/core', CoreWebhookController::class)
     ->middleware(VerifyCoreSignature::class)
-    ->name('saas-commerce.webhooks.core');
+    ->name('core-adapter.webhooks.core');
