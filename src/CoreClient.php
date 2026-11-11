@@ -74,6 +74,21 @@ final class CoreClient
     }
 
     /**
+     * Un PUT — la forme des routes qui remplacent une ressource.
+     *
+     * La déclaration de la forme du locataire passe par là : elle décrit
+     * une forme, elle ne touche ni à l'argent ni au commerce, donc sans clé
+     * d'idempotence.
+     *
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
+    public function put(string $path, array $body = []): array
+    {
+        return $this->send('PUT', $this->config->endpoint($path), $this->encode($body), []);
+    }
+
+    /**
      * Un POST **avec** la clé d'idempotence en en-tête — la forme des routes
      * qui touchent à l'argent.
      *

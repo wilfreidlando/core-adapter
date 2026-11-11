@@ -12,6 +12,7 @@ use CoreAdapter\Http\Transport;
 use CoreAdapter\Laravel\Cache\CacheEntitlementsCache;
 use CoreAdapter\Laravel\Cache\CacheEventStore;
 use CoreAdapter\Laravel\Console\CheckCommand;
+use CoreAdapter\Laravel\Console\DeclareTenantSchemaCommand;
 use CoreAdapter\Laravel\Console\ExportTenantsCommand;
 use CoreAdapter\Laravel\Events\CoreEventReceived;
 use CoreAdapter\Laravel\Http\LaravelTransport;
@@ -22,6 +23,7 @@ use CoreAdapter\Services\Entitlements;
 use CoreAdapter\Services\Notifications;
 use CoreAdapter\Services\Payments;
 use CoreAdapter\Services\Portal;
+use CoreAdapter\Services\TenantSchemas;
 use CoreAdapter\Services\Usage;
 use CoreAdapter\Services\Wallets;
 use CoreAdapter\Webhooks\Receiver;
@@ -120,6 +122,8 @@ final class CoreClientServiceProvider extends ServiceProvider
 
         $this->app->singleton(Customers::class, fn (Application $app): Customers => new Customers($app->make(CoreClient::class)));
 
+        $this->app->singleton(TenantSchemas::class, fn (Application $app): TenantSchemas => new TenantSchemas($app->make(CoreClient::class)));
+
         $this->app->singleton(
             Entitlements::class,
             fn (Application $app): Entitlements => new Entitlements(
@@ -161,7 +165,11 @@ final class CoreClientServiceProvider extends ServiceProvider
                 __DIR__.'/../../config/core.php' => $this->app->configPath('core.php'),
             ], 'core-config');
 
-            $this->commands([CheckCommand::class, ExportTenantsCommand::class]);
+            $this->commands([
+                CheckCommand::class,
+                DeclareTenantSchemaCommand::class,
+                ExportTenantsCommand::class,
+            ]);
         }
     }
 
