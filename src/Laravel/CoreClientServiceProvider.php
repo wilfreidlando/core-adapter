@@ -12,6 +12,7 @@ use CoreAdapter\Http\Transport;
 use CoreAdapter\Laravel\Cache\CacheEntitlementsCache;
 use CoreAdapter\Laravel\Cache\CacheEventStore;
 use CoreAdapter\Laravel\Console\CheckCommand;
+use CoreAdapter\Laravel\Console\ExportTenantsCommand;
 use CoreAdapter\Laravel\Events\CoreEventReceived;
 use CoreAdapter\Laravel\Http\LaravelTransport;
 use CoreAdapter\Laravel\Listeners\ApplyBillingEvent;
@@ -160,7 +161,7 @@ final class CoreClientServiceProvider extends ServiceProvider
                 __DIR__.'/../../config/core.php' => $this->app->configPath('core.php'),
             ], 'core-config');
 
-            $this->commands([CheckCommand::class]);
+            $this->commands([CheckCommand::class, ExportTenantsCommand::class]);
         }
     }
 
