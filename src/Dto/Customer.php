@@ -19,6 +19,7 @@ final readonly class Customer
 {
     /**
      * @param array<string, mixed> $metadata des identifiants techniques (jamais des données personnelles)
+     * @param array<string, mixed> $declaredAttributes les valeurs que le projet a déclarées au Core
      */
     public function __construct(
         public string $id,
@@ -34,6 +35,7 @@ final readonly class Customer
         public ?string $createdAt,
         public ?string $updatedAt,
         public ?string $erasedAt,
+        public array $declaredAttributes = [],
     ) {}
 
     /**
@@ -55,6 +57,9 @@ final readonly class Customer
             createdAt: Payload::string($data, 'created_at'),
             updatedAt: Payload::string($data, 'updated_at'),
             erasedAt: Payload::string($data, 'erased_at'),
+            // Les valeurs que le projet a déclarées au Core : la clé est celle
+            // de la déclaration, la valeur est celle que l'opérateur a saisie.
+            declaredAttributes: Payload::map($data, 'declared_attributes'),
         );
     }
 

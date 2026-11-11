@@ -70,6 +70,26 @@ final class TenantProvisioningTest extends TestCase
         $this->assertInstanceOf(TenantProvisioned::class, $this->evenements->dispatches[0]);
     }
 
+    public function test_the_declared_values_read_from_the_core_reach_the_factory(): void
+    {
+        $this->declaration = new FakeTenantDeclaration([
+            ['cle' => 'nom', 'source' => 'core_identity.display_name', 'requis' => true],
+            ['cle' => 'localisation', 'source' => 'declared.localisation'],
+        ]);
+
+        $this->transport->json(200, $this->clientEnCore() + [
+            'declared_attributes' => ['localisation' => 'Douala'],
+        ]);
+
+        $this->provisionner('AE0042');
+
+        $this->assertCount(1, $this->fabrique->creations);
+        $this->assertSame([
+            'nom' => 'Auto-École du Centre',
+            'localisation' => 'Douala',
+        ], $this->fabrique->creations[0]['attributs']);
+    }
+
     public function test_a_customer_the_core_does_not_know_creates_nothing(): void
     {
         $this->transport->json(404, ['type' => 'https://errors.core-system.internal/customer-not-found']);

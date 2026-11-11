@@ -173,14 +173,17 @@ final class ProvisionsTenant implements ShouldBeUnique, ShouldQueue
      */
     private function valeur(string $source, Customer $client): mixed
     {
+        // `declared.<clé>` : la valeur vient des attributs que le projet a
+        // déclarés au Core — la clé est celle de la déclaration.
+        if (str_starts_with($source, 'declared.')) {
+            return $client->declaredAttributes[substr($source, strlen('declared.'))] ?? null;
+        }
+
         return match ($source) {
             'core_identity.display_name' => $client->displayName,
             'core_identity.email' => $client->email,
             'core_identity.phone' => $client->phone,
             'core_identity.locale' => $client->locale,
-            // `declared.<clé>` : la valeur vient des attributs déclarés par le
-            // projet au Core. Tant que le Core ne les connaît pas, il n'y en a
-            // pas — l'application les réclame alors ailleurs.
             default => null,
         };
     }
