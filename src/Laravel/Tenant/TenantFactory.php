@@ -13,7 +13,7 @@ namespace CoreAdapter\Laravel\Tenant;
  * rejouer en cas de panne, ne pas créer deux fois le même locataire.
  *
  * ```php
- * final class LocataireAutoEcole implements TenantFactory
+ * final class MonLocataire implements TenantFactory
  * {
  *     public function trouver(string $reference): ?object { /* … *\/ }
  *     public function lier(object $locataire, string $reference): void { /* … *\/ }

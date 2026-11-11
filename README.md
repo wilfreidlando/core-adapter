@@ -252,7 +252,7 @@ Votre application écrit **deux choses** : la **déclaration** de ses clés, et 
 ```php
 use CoreAdapter\Laravel\Tenant\TenantDeclaration;
 
-final class LocataireAutoEcole implements TenantDeclaration
+final class MonLocataire implements TenantDeclaration
 {
     /**
      * L'attribut qui identifie un locataire chez vous, et le motif que doit
@@ -289,7 +289,7 @@ viendront des attributs que votre projet aura déclarés au Core.
 ```php
 use CoreAdapter\Laravel\Tenant\TenantFactory;
 
-final class LocataireAutoEcole implements TenantFactory
+final class MonLocataire implements TenantFactory
 {
     /** Le locataire que porte cette référence, s'il existe déjà. */
     public function trouver(string $reference): ?object { /* … */ }
@@ -313,9 +313,9 @@ s'arrêtera sans être rejouée.
 ```php
 // app/Providers/CoreServiceProvider.php
 
-$this->app->singleton(LocataireAutoEcole::class);
-$this->app->alias(LocataireAutoEcole::class, TenantFactory::class);
-$this->app->alias(LocataireAutoEcole::class, TenantDeclaration::class);
+$this->app->singleton(MonLocataire::class);
+$this->app->alias(MonLocataire::class, TenantFactory::class);
+$this->app->alias(MonLocataire::class, TenantDeclaration::class);
 ```
 
 ### Ce que le paquet fait de votre fabrique
