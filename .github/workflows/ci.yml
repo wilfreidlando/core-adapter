@@ -20,8 +20,9 @@ jobs:
       - name: Installer PHP
         uses: shivammathur/setup-php@v2
         with:
-          # La plus basse version que le paquet déclare (`php: ^8.2`).
-          php-version: '8.2'
+          # La version qu'exigent les dépendances verrouillées
+          # (`symfony/console` v8). Le paquet, lui, déclare `php: ^8.2`.
+          php-version: '8.4'
           extensions: curl, mbstring, dom, xml
           coverage: none
 

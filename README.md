@@ -237,6 +237,112 @@ le seul `4xx` à renvoyer, les autres font abandonner le Core.
 
 ---
 
+## Créer son locataire : le patron de provisionnement
+
+Le Core crée le client ; **votre application crée son locataire**. Le paquet
+porte toute la machinerie : recevoir l'événement, vérifier la référence, relire
+le client chez le Core, rejouer en cas de panne, ne jamais créer deux fois le
+même locataire.
+
+Votre application écrit **deux choses** : la **déclaration** de ses clés, et la
+**fabrique** de son locataire. C'est tout — le paquet est déjà branché.
+
+### La déclaration : vos clés
+
+```php
+use CoreAdapter\Laravel\Tenant\TenantDeclaration;
+
+final class LocataireAutoEcole implements TenantDeclaration
+{
+    /**
+     * L'attribut qui identifie un locataire chez vous, et le motif que doit
+     * respecter la référence du Core pour le devenir.
+     *
+     * @return array{attribut: string, motif: string}
+     */
+    public function cleUnique(): array
+    {
+        return ['attribut' => 'code', 'motif' => '/^AE[0-9]{4}$/'];
+    }
+
+    /**
+     * Les clés dont vous avez besoin, et d'où vient chacune.
+     *
+     * @return array<int, array{cle: string, source: string, requis?: bool}>
+     */
+    public function champs(): array
+    {
+        return [
+            ['cle' => 'nom', 'source' => 'core_identity.display_name', 'requis' => true],
+            ['cle' => 'email', 'source' => 'core_identity.email', 'requis' => true],
+        ];
+    }
+}
+```
+
+Les sources `core_identity.*` viennent de l'identité que le Core tient du client
+(`display_name`, `email`, `phone`, `locale`). Les sources `declared.<clé>`
+viendront des attributs que votre projet aura déclarés au Core.
+
+### La fabrique : votre locataire
+
+```php
+use CoreAdapter\Laravel\Tenant\TenantFactory;
+
+final class LocataireAutoEcole implements TenantFactory
+{
+    /** Le locataire que porte cette référence, s'il existe déjà. */
+    public function trouver(string $reference): ?object { /* … */ }
+
+    /** Relie un locataire existant à la référence du Core. */
+    public function lier(object $locataire, string $reference): void { /* … */ }
+
+    /** Crée le locataire. */
+    public function creer(string $cle, array $attributs): object { /* … */ }
+}
+```
+
+`creer()` reçoit la clé unique (`$cle`) et la valeur de chaque clé déclarée
+(`$attributs`). Elle doit être **atomique** et **idempotente** : le même appel
+ne doit pas créer deux fois le même locataire. Si les données sont inexploitables
+— pas d'e-mail, pas de raison sociale — levez une `DomainException` : la tâche
+s'arrêtera sans être rejouée.
+
+### Le branchement
+
+```php
+// app/Providers/CoreServiceProvider.php
+
+$this->app->singleton(LocataireAutoEcole::class);
+$this->app->alias(LocataireAutoEcole::class, TenantFactory::class);
+$this->app->alias(LocataireAutoEcole::class, TenantDeclaration::class);
+```
+
+### Ce que le paquet fait de votre fabrique
+
+| Situation | Ce qui se passe |
+|---|---|
+| La référence ne respecte pas le motif déclaré | **rien** n'est créé, la raison est journalisée |
+| Le Core ne connaît pas ce client (404) | **rien** n'est créé |
+| Le Core n'a pas répondu (503, délai) | la tâche est **rejouée** |
+| L'événement est rejoué, ou deux événements portent la même référence | **un seul** locataire |
+| `creer()` lève une `DomainException` | la tâche **s'arrête** — les données ne changeront pas d'elles-mêmes |
+
+### L'événement que le paquet émet
+
+`TenantProvisioned` est émis quand le locataire vient d'être créé — pour écrire
+une trace, ouvrir une session, prévenir quelqu'un :
+
+```php
+use CoreAdapter\Laravel\Tenant\TenantProvisioned;
+
+Event::listen(TenantProvisioned::class, function (TenantProvisioned $e): void {
+    Log::info('Locataire créé', ['reference' => $e->reference]);
+});
+```
+
+---
+
 ## Les services optionnels
 
 Trois services s'ajoutent selon ce que votre application fait. Ils sont

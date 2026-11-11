@@ -15,6 +15,7 @@ use CoreAdapter\Laravel\Console\CheckCommand;
 use CoreAdapter\Laravel\Events\CoreEventReceived;
 use CoreAdapter\Laravel\Http\LaravelTransport;
 use CoreAdapter\Laravel\Listeners\ApplyBillingEvent;
+use CoreAdapter\Laravel\Listeners\CustomerEventProvisionsTenant;
 use CoreAdapter\Services\Customers;
 use CoreAdapter\Services\Entitlements;
 use CoreAdapter\Services\Notifications;
@@ -148,6 +149,11 @@ final class CoreClientServiceProvider extends ServiceProvider
         // Les droits sont lus à chaque page sensible : ils sont mis en cache,
         // et ce cache est vidé dès que l'état du locataire bouge.
         Event::listen(CoreEventReceived::class, ApplyBillingEvent::class);
+
+        // Un client existe chez le Core : l'application crée son locataire.
+        // C'est la seule conséquence que le paquet attache à cet événement —
+        // et elle ne se produit que si l'application fournit une fabrique.
+        Event::listen(CoreEventReceived::class, CustomerEventProvisionsTenant::class);
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
