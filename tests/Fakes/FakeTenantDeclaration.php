@@ -13,7 +13,7 @@ use CoreAdapter\Laravel\Tenant\TenantDeclaration;
 final class FakeTenantDeclaration implements TenantDeclaration
 {
     /**
-     * @param array<int, array{cle: string, source: string, requis?: bool}> $champs
+     * @param array<int, array{cle: string, source: string, requis?: bool, libelle?: string, type?: string, longueur?: int}> $champs
      */
     public function __construct(private readonly array $champs = []) {}
 
@@ -26,7 +26,7 @@ final class FakeTenantDeclaration implements TenantDeclaration
     }
 
     /**
-     * @return array<int, array{cle: string, source: string, requis?: bool}>
+     * @return array<int, array{cle: string, source: string, requis?: bool, libelle?: string, type?: string, longueur?: int}>
      */
     public function champs(): array
     {

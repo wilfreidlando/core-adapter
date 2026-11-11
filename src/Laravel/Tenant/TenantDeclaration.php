@@ -36,7 +36,11 @@ interface TenantDeclaration
     /**
      * Les clés dont l'application a besoin, et d'où vient chacune.
      *
-     * @return array<int, array{cle: string, source: string, requis?: bool}>
+     * `libelle` est ce que l'opérateur verra devant le champ — c'est le
+     * vocabulaire de l'application, pas celui du Core. `type` et `longueur`
+     * bornent la saisie ; le Core les rend tels quels.
+     *
+     * @return array<int, array{cle: string, source: string, requis?: bool, libelle?: string, type?: string, longueur?: int}>
      */
     public function champs(): array;
 }
