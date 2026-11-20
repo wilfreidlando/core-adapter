@@ -46,6 +46,8 @@ final class CoreClient
      *
      * @param array<string, mixed> $query
      * @return array<string, mixed>
+     *
+     * @throws CoreException le Core a refusé, ou n'a pas répondu
      */
     public function get(string $path, array $query = []): array
     {
@@ -82,6 +84,8 @@ final class CoreClient
      *
      * @param array<string, mixed> $body
      * @return array<string, mixed>
+     *
+     * @throws CoreException le Core a refusé, ou n'a pas répondu
      */
     public function put(string $path, array $body = []): array
     {
@@ -120,6 +124,8 @@ final class CoreClient
     /**
      * @param array<string, string> $extraHeaders
      * @return array<string, mixed>
+     *
+     * @throws CoreException le Core a refusé, ou n'a pas répondu
      */
     private function send(string $method, string $url, ?string $body, array $extraHeaders): array
     {

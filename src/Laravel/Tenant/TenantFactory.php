@@ -20,6 +20,14 @@ namespace CoreAdapter\Laravel\Tenant;
  *     public function creer(string $cle, array $attributs): object { /* … *\/ }
  * }
  * ```
+ *
+ * Une application qui veut **reprendre** un locataire déjà connu — les
+ * valeurs déclarées apparaissent souvent après la création du client —
+ * implémente en plus `SynchronizesTenant` : le paquet relit alors le client
+ * chez le Core et appelle `synchroniser()`. Une application qui ne le fait
+ * pas ne change rien.
+ *
+ * @see SynchronizesTenant
  */
 interface TenantFactory
 {

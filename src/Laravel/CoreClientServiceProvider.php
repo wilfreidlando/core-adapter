@@ -18,6 +18,7 @@ use CoreAdapter\Laravel\Events\CoreEventReceived;
 use CoreAdapter\Laravel\Http\LaravelTransport;
 use CoreAdapter\Laravel\Listeners\ApplyBillingEvent;
 use CoreAdapter\Laravel\Listeners\CustomerEventProvisionsTenant;
+use CoreAdapter\Laravel\Tenant\TenantSchemaDeclarer;
 use CoreAdapter\Services\Customers;
 use CoreAdapter\Services\Entitlements;
 use CoreAdapter\Services\Notifications;
@@ -123,6 +124,11 @@ final class CoreClientServiceProvider extends ServiceProvider
         $this->app->singleton(Customers::class, fn (Application $app): Customers => new Customers($app->make(CoreClient::class)));
 
         $this->app->singleton(TenantSchemas::class, fn (Application $app): TenantSchemas => new TenantSchemas($app->make(CoreClient::class)));
+
+        $this->app->singleton(
+            TenantSchemaDeclarer::class,
+            fn (Application $app): TenantSchemaDeclarer => new TenantSchemaDeclarer($app->make(TenantSchemas::class)),
+        );
 
         $this->app->singleton(
             Entitlements::class,

@@ -85,6 +85,15 @@ final class ProvisionsTenant implements ShouldBeUnique, ShouldQueue
         if ($existant !== null) {
             $fabrique->lier($existant, $this->reference);
 
+            // Les valeurs déclarées apparaissent souvent **après** la
+            // création du client : l'opérateur renseigne la localisation ou
+            // l'année plus tard. Une fabrique qui sait se synchroniser est
+            // alors relue chez le Core — et une fabrique qui ne le sait pas
+            // ne change strictement rien.
+            if ($fabrique instanceof SynchronizesTenant) {
+                $this->synchroniser($fabrique, $existant, $clients);
+            }
+
             return;
         }
 
@@ -143,6 +152,34 @@ final class ProvisionsTenant implements ShouldBeUnique, ShouldQueue
         }
 
         Event::dispatch(new TenantProvisioned($this->reference, $locataire, $client->id));
+    }
+
+    /**
+     * Reprend le locataire local à partir du client que le Core connaît.
+     *
+     * L'appel réseau est ici, dans le worker — jamais dans un écouteur.
+     */
+    private function synchroniser(SynchronizesTenant $fabrique, object $locataire, Customers $clients): void
+    {
+        try {
+            $client = $clients->get($this->reference);
+        } catch (CoreException $e) {
+            if ($e->isTransient()) {
+                // Le Core n'a pas répondu : la tâche est rejouée plus tard.
+                throw $e;
+            }
+
+            Log::warning('Le Core ne connaît pas ce locataire : aucune synchronisation', [
+                'evenement' => $this->eventId,
+                'reference' => $this->reference,
+                'statut' => $e->status,
+                'type' => $e->type,
+            ]);
+
+            return;
+        }
+
+        $fabrique->synchroniser($locataire, $this->reference, $client);
     }
 
     /**

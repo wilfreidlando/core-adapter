@@ -43,6 +43,12 @@ final class Scopes
     /** Écrire dans un portefeuille (`POST /v1/wallets/{transfers,withdrawals}`). */
     public const WALLETS_WRITE = 'wallets:write';
 
+    /** Proposer la forme du locataire (`PUT /v1/projects/{id}/tenant-schema`). */
+    public const TENANT_SCHEMA_WRITE = 'tenant_schema:write';
+
+    /** Relire la forme du locataire (`GET /v1/projects/{id}/tenant-schema`). */
+    public const TENANT_SCHEMA_READ = 'tenant_schema:read';
+
     /**
      * Les portées des surfaces **toujours présentes** : sans elles, le paquet
      * ne peut pas faire son travail.

@@ -6,12 +6,14 @@ namespace CoreAdapter\Tests\Unit;
 
 use CoreAdapter\CoreException;
 use CoreAdapter\Laravel\Tenant\ProvisionsTenant;
+use CoreAdapter\Laravel\Tenant\TenantFactory;
 use CoreAdapter\Laravel\Tenant\TenantProvisioned;
 use CoreAdapter\Services\Customers;
 use CoreAdapter\Tests\Fakes\FakeEventDispatcher;
 use CoreAdapter\Tests\Fakes\FakeLogger;
 use CoreAdapter\Tests\Fakes\FakeTenantDeclaration;
 use CoreAdapter\Tests\Fakes\FakeTenantFactory;
+use CoreAdapter\Tests\Fakes\SynchronizingTenantFactory;
 use CoreAdapter\Tests\TestCase;
 use DomainException;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +43,41 @@ final class TenantProvisioningTest extends TestCase
         $this->assertSame(['AE0042'], $this->fabrique->lies);
         $this->assertSame([], $this->fabrique->creations);
         $this->assertSame([], $this->transport->requests());
+    }
+
+    public function test_an_existing_tenant_is_synchronized_with_the_client_read_from_the_core(): void
+    {
+        $fabrique = new SynchronizingTenantFactory;
+        $fabrique->existant = (object) ['code' => 'AE0042'];
+
+        $this->transport->json(200, $this->clientEnCore() + [
+            'declared_attributes' => ['localisation' => 'Douala'],
+        ]);
+
+        $this->provisionner('AE0042', $fabrique);
+
+        // La liaison garde son sens : elle ne touche qu'à la correspondance.
+        self::assertSame(['AE0042'], $fabrique->lies);
+
+        // Et le locataire est repris avec ce que le Core sait de lui.
+        self::assertCount(1, $fabrique->synchronisations);
+        self::assertSame('AE0042', $fabrique->synchronisations[0]['reference']);
+        self::assertSame(
+            'Douala',
+            $fabrique->synchronisations[0]['client']->declaredAttributes['localisation'] ?? null,
+        );
+    }
+
+    public function test_a_factory_that_cannot_synchronize_is_left_alone(): void
+    {
+        $this->fabrique->existant = (object) ['code' => 'AE0042'];
+
+        $this->provisionner('AE0042');
+
+        self::assertSame(['AE0042'], $this->fabrique->lies);
+        // Aucun appel au Core : une fabrique qui ne sait pas se
+        // synchroniser ne coûte rien.
+        self::assertSame([], $this->transport->requests());
     }
 
     public function test_a_reference_out_of_format_creates_nothing(): void
@@ -166,10 +203,10 @@ final class TenantProvisioningTest extends TestCase
         ];
     }
 
-    private function provisionner(string $reference): void
+    private function provisionner(string $reference, ?TenantFactory $fabrique = null): void
     {
         $job = new ProvisionsTenant($reference, 'evt_1');
 
-        $job->handle(new Customers($this->client), $this->fabrique, $this->declaration);
+        $job->handle(new Customers($this->client), $fabrique ?? $this->fabrique, $this->declaration);
     }
 }

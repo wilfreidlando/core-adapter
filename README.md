@@ -95,7 +95,9 @@ php artisan core:check
 La commande vérifie que l'adresse est joignable, que la clé est valide, que les
 portées dont le paquet a besoin sont présentes, et que le secret des
 événements est configuré. Elle dit **ce qui manque**, et sort en code `1` dès
-qu'un élément requis manque.
+qu'un élément requis manque. Elle dit aussi **où en est la forme du locataire** :
+cette ligne-là n'est qu'une information — une application qui ne déclare aucune
+forme n'a rien à signaler.
 
 ```
 Core — https://core.example.com
@@ -105,6 +107,7 @@ Core — https://core.example.com
   ✓ Le secret des événements est configuré
   ✓ Le Core répond (projet 01a101a1-7a96-712d-b63a-e3bbc27ae721)
   ✓ Les portées du paquet sont présentes (customers:read, usage:read, usage:write, portal:write)
+  ! Votre déclaration de la forme du locataire est en attente d'acceptation dans la console du Core.
   · notifications (service optionnel) : il manque notifications:write
 
   Tout est branché.
@@ -284,6 +287,63 @@ Les sources `core_identity.*` viennent de l'identité que le Core tient du clien
 (`display_name`, `email`, `phone`, `locale`). Les sources `declared.<clé>`
 viendront des attributs que votre projet aura déclarés au Core.
 
+> **Une source `declared.<x>` doit nommer la clé du champ `cle`.**
+> Le Core range un attribut déclaré sous la **clé du champ**, et le paquet lit
+> la valeur par le **suffixe** de la source : les deux ne se rejoignent que si
+> la source dit `declared.localisation` pour le champ `localisation`. Le
+> paquet **vérifie** cette correspondance avant d'envoyer quoi que ce soit, et
+> refuse la déclaration si elle ne tient pas.
+
+### Le motif : deux formats, une seule chaîne
+
+Le motif que vous écrivez est un motif **`preg`** : il sert à la validation
+locale de la référence, et il reste intact. Le Core, lui, n'accepte qu'un motif
+**nu** — dans l'alphabet `A-Za-z0-9._:-`, avec `^` en tête et `$` en fin, sans
+délimiteur ni modificateur.
+
+Le paquet **traduit** le vôtre au moment de l'envoi, et refuse ce qui n'a pas
+de traduction honnête :
+
+| Votre motif (applicatif) | Ce que le Core reçoit |
+|---|---|
+| `/^AE[0-9]{4}(?:[0-9]{2}){0,2}$/` | `^AE[0-9]{4}([0-9]{2}){0,2}$` |
+| `/^AE[0-9]{4,8}$/i` | `^AE[0-9]{4,8}$` |
+| `/^\d{4}$/` | `^[0-9]{4}$` |
+| `/^\w+$/` | `^[A-Za-z0-9]+$` |
+
+Sont refusés **localement**, avec un message qui dit quoi faire : les espaces
+(`\s`), le joker (`.`), les classes négatives (`[^…]`), les groupes étendus
+(`(?i)`, `(?P<…>)`), et tout caractère hors de l'alphabet d'une référence.
+
+### Dire sa forme au Core
+
+```bash
+php artisan core:declare-tenant-schema
+```
+
+La commande lit votre déclaration, la traduit, et la **propose** au Core. Une
+proposition n'est pas une forme en force : elle attend que l'opérateur la lise
+et l'accepte, dans la console du Core. La commande vous le dit.
+
+Pour savoir où en est la déclaration :
+
+```php
+use CoreAdapter\Services\TenantSchemas;
+
+$schemas = app(TenantSchemas::class);
+
+$enForce = $schemas->accepted('prj_1');   // la forme en vigueur, ou null
+$enAttente = $schemas->pending('prj_1');  // la proposition qui attend l'opérateur
+```
+
+`php artisan core:check` le dit aussi, en clair :
+
+> Votre déclaration de la forme du locataire est en attente d'acceptation dans
+> la console du Core.
+
+Cette lecture demande la portée `tenant_schema:read` ; sans elle, `core:check`
+le signale et continue.
+
 ### La fabrique : votre locataire
 
 ```php
@@ -308,6 +368,35 @@ ne doit pas créer deux fois le même locataire. Si les données sont inexploita
 — pas d'e-mail, pas de raison sociale — levez une `DomainException` : la tâche
 s'arrêtera sans être rejouée.
 
+### La resynchronisation — facultative
+
+Quand le locataire **existe déjà**, le paquet le relie à la référence du Core et
+s'arrête : il ne le relit pas. Si vous voulez que votre locataire soit remis au
+jour avec ce que le Core sait maintenant (un attribut déclaré qui a changé, un
+e-mail corrigé), implémentez en plus `SynchronizesTenant` :
+
+```php
+use CoreAdapter\Dto\Customer;
+use CoreAdapter\Laravel\Tenant\SynchronizesTenant;
+
+final class MonLocataire implements TenantFactory, SynchronizesTenant
+{
+    /** Le locataire est relu chez le Core : remettez-le au jour. */
+    public function synchroniser(object $locataire, string $reference, Customer $client): void
+    {
+        $locataire->update([
+            'email' => $client->email,
+            'localisation' => $client->declaredAttributes['localisation'] ?? null,
+        ]);
+    }
+}
+```
+
+Le paquet relit le client **dans la tâche** (jamais dans l'écouteur : le Core
+attend une réponse en moins de dix secondes), puis appelle `synchroniser()`.
+Une application qui ne l'implémente pas **ne change rien** : le lien est fait,
+comme avant.
+
 ### Le branchement
 
 ```php
@@ -326,6 +415,7 @@ $this->app->alias(MonLocataire::class, TenantDeclaration::class);
 | Le Core ne connaît pas ce client (404) | **rien** n'est créé |
 | Le Core n'a pas répondu (503, délai) | la tâche est **rejouée** |
 | L'événement est rejoué, ou deux événements portent la même référence | **un seul** locataire |
+| Le locataire **existe déjà** | il est **relié** ; et relu chez le Core, si votre fabrique sait se resynchroniser |
 | `creer()` lève une `DomainException` | la tâche **s'arrête** — les données ne changeront pas d'elles-mêmes |
 
 ### L'événement que le paquet émet
@@ -435,10 +525,14 @@ que vous avez fait hors du Core — le Core n'envoie pas l'argent.
 | lire un paiement | `GET /v1/payments/{id}` | `payments:read` |
 | lire un portefeuille | `GET /v1/wallets/…` | `wallets:read` |
 | écrire dans un portefeuille | `POST /v1/wallets/{transfers,withdrawals}` | `wallets:write` |
+| proposer la forme du locataire | `PUT /v1/projects/{id}/tenant-schema` | `tenant_schema:write` |
+| relire la forme du locataire | `GET /v1/projects/{id}/tenant-schema` | `tenant_schema:read` |
 
 Les quatre premières sont **obligatoires** : le paquet en a besoin pour ses
 surfaces toujours présentes. Les autres ne concernent que les services
-optionnels — demandez-les si vous les utilisez.
+optionnels — demandez-les si vous les utilisez. Les deux dernières ne servent
+qu'à la **forme du locataire** : demandez-les si votre application en déclare
+une.
 
 Demandez à l'administrateur du Core une clé avec le modèle de portées
 **« Application cliente »** :

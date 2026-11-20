@@ -23,6 +23,13 @@ namespace CoreAdapter\Laravel\Tenant;
  *    l'identité que le Core tient du client ;
  *  - `declared.<clé>` : la valeur vient des attributs que le projet a déclarés
  *    au Core (absents tant que le Core ne les connaît pas).
+ *
+ * **Une source `declared.<x>` doit nommer la clé du champ `cle`.** Le Core
+ * stocke la valeur sous la **clé du champ**, et le paquet la relit sous le
+ * **suffixe de la source** : les deux ne coïncident que si la source nomme
+ * la clé. Une source `declared.emplacement` sur un champ `localisation`
+ * serait donc refusée par le Core (`422 invalid-tenant-schema`), et la
+ * valeur resterait introuvable.
  */
 interface TenantDeclaration
 {
@@ -39,6 +46,10 @@ interface TenantDeclaration
      * `libelle` est ce que l'opérateur verra devant le champ — c'est le
      * vocabulaire de l'application, pas celui du Core. `type` et `longueur`
      * bornent la saisie ; le Core les rend tels quels.
+     *
+     * **La source `declared.<x>` doit nommer la clé du champ `cle`** — c'est
+     * la règle que le Core applique (ADR-0130 §2) et que le paquet vérifie
+     * avant l'envoi.
      *
      * @return array<int, array{cle: string, source: string, requis?: bool, libelle?: string, type?: string, longueur?: int}>
      */
