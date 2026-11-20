@@ -19,6 +19,25 @@ application qui n'est pas en Laravel utilise le transport `curl` du noyau.
 
 ---
 
+## La documentation
+
+Ce fichier est la **carte** du paquet. Les parcours détaillés — avec le code à
+écrire — sont dans [`docs/`](docs/) :
+
+| Page | Ce qu'elle donne |
+|---|---|
+| [Installation](docs/installation.md) | le branchement complet, en 15 minutes, et la commande qui dit ce qui manque |
+| [Le locataire](docs/locataire.md) | la déclaration de la forme, la fabrique, le provisionnement, la resynchronisation |
+| [Droits, usage et portail](docs/droits-usage-portail.md) | « ai-je le droit ? », « compte-le », « va payer ton compte » |
+| [Paiements](docs/paiements.md) | les deux flux d'encaissement, et **comment relire l'état d'un paiement** |
+| [Notifications](docs/notifications.md) | envoyer un WhatsApp, et savoir ce qu'il est devenu |
+| [Portefeuilles](docs/portefeuilles.md) | lire, transférer, enregistrer un retrait |
+| [Événements](docs/evenements.md) | la signature, le catalogue des événements, le dédoublonnage |
+| [Erreurs](docs/erreurs.md) | le catalogue des refus du Core, et quoi faire de chacun |
+| [Hors Laravel](docs/hors-laravel.md) | le noyau dans une application sans framework |
+
+---
+
 ## Installation
 
 ### 1. Le paquet

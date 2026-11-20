@@ -15,13 +15,16 @@ use CoreAdapter\Dto\Notification;
  * dans `variables.phone_number`, **jamais** dans `to_party_ref` — qui n'est
  * qu'une référence opaque de VOTRE système.
  *
- * L'envoi est asynchrone : la réponse dit `sent` ou `failed`, et l'état
- * final arrive par l'événement `notification.delivered`, `notification.read`
- * ou `notification.failed`.
+ * L'envoi est **synchrone** : la réponse dit `sent` ou `failed` — et elle le
+ * dit même quand l'envoi a échoué (c'est un `201`). L'état final, lui,
+ * arrive par l'événement `notification.delivered`, `notification.read` ou
+ * `notification.failed`.
  *
  * ⚠️ Ces routes ne portent **pas** de clé d'idempotence en en-tête : le Core
- * les déduplique sur `client_reference`, un champ du corps. Rejouer la même
- * référence ne renvoie pas le premier envoi, elle en fait un nouveau.
+ * les déduplique sur `client_reference`, un champ du corps. Deux requêtes
+ * portant la même `client_reference` sur le même projet rendent **la même**
+ * notification, et le second envoi n'a pas lieu. Sans `client_reference`, le
+ * Core génère un UUID par requête : chaque appel est un envoi neuf.
  */
 final class Notifications
 {
@@ -35,8 +38,9 @@ final class Notifications
      *
      * @param string $toPartyRef VOTRE référence du destinataire (jamais un numéro)
      * @param string $phoneNumber le numéro du destinataire, en E.164
-     * @param string|null $clientReference votre référence : rejouée, elle ne
-     *                                     renvoie pas le premier envoi, elle en fait un nouveau
+     * @param string|null $clientReference votre référence : rejouée avec la
+     *                                     même valeur, elle rend la notification
+     *                                     d'origine et n'envoie pas un second message
      */
     public function text(
         string $toPartyRef,
