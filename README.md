@@ -105,6 +105,19 @@ ou, dans `routes/api.php` (Laravel 10 et avant) :
 require base_path('vendor/wilfreidlando/core-adapter/routes/core.php');
 ```
 
+Ce même fichier sert **deux lectures**, que le Core vient chercher — jamais
+pour écrire, toujours pour lire :
+
+| Route | Ce qu'elle rend |
+|-------|-----------------|
+| `GET /core/tenant-schema` | la forme que votre application veut pour son locataire |
+| `POST /core/tenants` | les locataires que votre application a déjà |
+
+C'est ce qui permet à l'opérateur de brancher votre application **depuis la
+console du Core**, sans commande et sans fichier : il récupère la forme que
+vous proposez, il relit la liste de vos clients, il décide. Les deux routes
+sont signées comme la première — même secret, même schéma.
+
 ### 4. La vérification
 
 ```bash

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace CoreAdapter\Laravel\Console;
 
+use CoreAdapter\Laravel\Tenant\TenantDeclaration;
 use CoreAdapter\Laravel\Tenant\TenantLister;
+use CoreAdapter\Laravel\Tenant\TenantRows;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Container\Container;
 
 /**
  * Exporte les locataires que l'application a déjà.
  *
- * Le Core ne les connaît pas encore. L'opérateur importe le fichier dans la
- * console du Core : le Core crée les clients, pousse `customer.created`, et
- * l'application **lie** ses locataires existants — aucun doublon, aucune
- * écriture de l'application chez le Core.
+ * **C'est le chemin de secours.** Le chemin ordinaire, c'est la console du
+ * Core : elle vient chercher la liste, l'opérateur la relit, et le Core crée
+ * les clients (ADR-0133). Cette commande reste pour le cas où l'application
+ * est injoignable, ou pour un lot hors bande.
  *
  * ```
  * php artisan core:export-tenants > tenants.csv
@@ -22,6 +24,13 @@ use Illuminate\Contracts\Container\Container;
  *
  * La commande est **en lecture seule** : elle ne parle pas au Core, elle ne
  * demande aucun droit, elle ne modifie rien.
+ *
+ * **Le fichier porte les colonnes de la forme en vigueur** — celles que
+ * l'application a déclarées : la référence, les colonnes du Core que la
+ * déclaration ne remplace pas, puis les clés déclarées, dans l'ordre de la
+ * déclaration. Le Core refuse un fichier dont l'en-tête ne porte pas
+ * exactement ces colonnes (ADR-0132) : l'export les écrit donc, au lieu de
+ * laisser l'opérateur les deviner.
  */
 final class ExportTenantsCommand extends Command
 {
@@ -43,18 +52,24 @@ final class ExportTenantsCommand extends Command
         /** @var TenantLister $lister */
         $lister = $container->make(TenantLister::class);
 
+        $champs = $this->champs($container);
+        $colonnes = $this->colonnes($champs);
+
         $lignes = [];
 
         foreach ($lister->tenants() as $locataire) {
-            $lignes[] = [
-                $locataire['external_ref'],
-                $locataire['display_name'],
-                $locataire['email'] ?? '',
-                $locataire['phone'] ?? '',
-            ];
+            $ligne = TenantRows::build(self::ligne($locataire), $champs);
+
+            $sortie = [];
+
+            foreach ($colonnes as $colonne) {
+                $sortie[] = $this->cellule($ligne[$colonne] ?? null);
+            }
+
+            $lignes[] = $sortie;
         }
 
-        $csv = $this->csv($lignes);
+        $csv = $this->csv($lignes, $colonnes);
 
         $fichier = $this->option('output');
 
@@ -76,11 +91,103 @@ final class ExportTenantsCommand extends Command
     }
 
     /**
+     * Les clés déclarées par l'application, si elle en déclare.
+     *
+     * @return list<array{cle: string, source: string, requis?: bool, libelle?: string, type?: string, longueur?: int}>
+     */
+    private function champs(Container $container): array
+    {
+        if (! $container->bound(TenantDeclaration::class)) {
+            return [];
+        }
+
+        /** @var TenantDeclaration $declaration */
+        $declaration = $container->make(TenantDeclaration::class);
+
+        return array_values($declaration->champs());
+    }
+
+    /**
+     * Les colonnes du fichier, dans l'ordre.
+     *
+     * La référence d'abord, puis les colonnes du Core que la déclaration ne
+     * remplace pas, puis les clés déclarées — l'ordre du modèle que le Core
+     * propose au téléchargement (ADR-0122 §5).
+     *
+     * @param list<array{cle: string, source: string, requis?: bool, libelle?: string, type?: string, longueur?: int}> $champs
+     * @return list<string>
+     */
+    private function colonnes(array $champs): array
+    {
+        $remplacees = [];
+
+        foreach ($champs as $champ) {
+            if (! str_starts_with($champ['source'], 'core_identity.')) {
+                continue;
+            }
+
+            $remplacees[substr($champ['source'], strlen('core_identity.'))] = true;
+        }
+
+        $colonnes = ['external_ref'];
+
+        foreach (['display_name', 'email', 'phone'] as $coeur) {
+            if (isset($remplacees[$coeur])) {
+                continue;
+            }
+
+            $colonnes[] = $coeur;
+        }
+
+        foreach ($champs as $champ) {
+            $colonnes[] = $champ['cle'];
+        }
+
+        return $colonnes;
+    }
+
+    /**
+     * Le locataire rendu par l'application.
+     *
+     * @return array<string, mixed>
+     */
+    private static function ligne(mixed $locataire): array
+    {
+        if (! is_array($locataire)) {
+            return [];
+        }
+
+        /** @var array<string, mixed> $locataire */
+        return $locataire;
+    }
+
+    /**
+     * Une valeur, comme le CSV l'attend : du texte, ou rien.
+     */
+    private function cellule(mixed $valeur): string
+    {
+        if ($valeur === null) {
+            return '';
+        }
+
+        if (is_string($valeur)) {
+            return $valeur;
+        }
+
+        if (is_int($valeur) || is_float($valeur) || is_bool($valeur)) {
+            return (string) $valeur;
+        }
+
+        return '';
+    }
+
+    /**
      * Le CSV, tel que la console du Core l'attend.
      *
-     * @param list<array{0: string, 1: string, 2: string, 3: string}> $lignes
+     * @param list<list<string>> $lignes
+     * @param list<string> $colonnes
      */
-    private function csv(array $lignes): string
+    private function csv(array $lignes, array $colonnes): string
     {
         $sortie = fopen('php://temp', 'r+');
 
@@ -88,7 +195,7 @@ final class ExportTenantsCommand extends Command
             return '';
         }
 
-        fputcsv($sortie, ['external_ref', 'display_name', 'email', 'phone']);
+        fputcsv($sortie, $colonnes);
 
         foreach ($lignes as $ligne) {
             fputcsv($sortie, $ligne);

@@ -18,6 +18,7 @@ use CoreAdapter\Laravel\Events\CoreEventReceived;
 use CoreAdapter\Laravel\Http\LaravelTransport;
 use CoreAdapter\Laravel\Listeners\ApplyBillingEvent;
 use CoreAdapter\Laravel\Listeners\CustomerEventProvisionsTenant;
+use CoreAdapter\Laravel\Middleware\VerifyCoreReadSignature;
 use CoreAdapter\Laravel\Tenant\TenantSchemaDeclarer;
 use CoreAdapter\Services\Customers;
 use CoreAdapter\Services\Entitlements;
@@ -110,6 +111,16 @@ final class CoreClientServiceProvider extends ServiceProvider
         $this->app->singleton(
             Signature::class,
             fn (Application $app): Signature => new Signature($app->make(CoreConfig::class)->webhookTolerance),
+        );
+
+        // Le garde des lectures que le Core vient chercher. Il porte le
+        // secret du point d'entrée : le même que celui des événements.
+        $this->app->singleton(
+            VerifyCoreReadSignature::class,
+            fn (Application $app): VerifyCoreReadSignature => new VerifyCoreReadSignature(
+                $app->make(Signature::class),
+                $app->make(CoreConfig::class)->webhookSecret ?? '',
+            ),
         );
 
         $this->app->singleton(

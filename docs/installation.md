@@ -113,6 +113,21 @@ qui n'envoie pas de WhatsApp n'a pas besoin de `notifications:write`.
 Le Core pousse ses événements **vers vous**, à une URL que vous choisissez.
 Une seule route est nécessaire : `POST /webhooks/core`.
 
+Le paquet en sert **deux autres**, que le Core vient chercher — jamais pour
+écrire, toujours pour lire :
+
+| Route | Ce qu'elle rend |
+|-------|-----------------|
+| `GET /core/tenant-schema` | la forme que votre application veut pour son locataire |
+| `POST /core/tenants` | les locataires que votre application a déjà |
+
+C'est ce qui permet à l'opérateur de **tout** faire depuis la console du
+Core, sans commande et sans fichier : il récupère la forme que votre
+application propose, il relit la liste de vos clients, il décide. Ces deux
+routes sont signées comme la première — même secret, même schéma — et
+n'existent que si le paquet est là : une application en version 1.6 ne répond
+pas, et la console le dit à l'opérateur.
+
 **Laravel 11 et plus** — dans `bootstrap/app.php` :
 
 ```php

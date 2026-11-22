@@ -12,14 +12,13 @@ namespace CoreAdapter\Laravel\Tenant;
  * l'application n'écrive jamais un client chez le Core (le Core reste le seul
  * écrivain de son état commercial).
  *
- * Le chemin est donc celui d'un **import fait par l'opérateur** : votre
- * application exporte ses locataires, l'opérateur importe le fichier dans la
- * console du Core, le Core crée les clients et pousse `customer.created` —
- * et votre application, qui connaît déjà ces locataires, **les lie** au lieu
- * d'en créer un second.
+ * Le chemin est celui d'une **lecture** : le Core vient chercher cette liste
+ * (ADR-0133), l'opérateur, depuis la console du Core, la relit, et le Core
+ * crée les clients et pousse `customer.created` — et votre application, qui
+ * connaît déjà ces locataires, **les lie** au lieu d'en créer un second.
  *
  * Ce contrat est **facultatif** : une application qui naît avec le Core n'a
- * rien à exporter, et n'implémente donc pas cette interface.
+ * rien à faire connaître, et n'implémente donc pas cette interface.
  *
  * ```php
  * final class LocatairesAutoEcole implements TenantLister
@@ -32,6 +31,9 @@ namespace CoreAdapter\Laravel\Tenant;
  *                 'display_name' => $autoEcole->nom,
  *                 'email' => $autoEcole->email,
  *                 'phone' => $autoEcole->telephone,
+ *                 // Et les valeurs que vous avez déclarées, sous le nom
+ *                 // de vos clés :
+ *                 'localisation' => $autoEcole->localisation,
  *             ];
  *         }
  *     }
@@ -41,12 +43,20 @@ namespace CoreAdapter\Laravel\Tenant;
 interface TenantLister
 {
     /**
-     * Les locataires de l'application, prêts à être exportés.
+     * Les locataires de l'application.
      *
-     * La forme est celle que le Core connaît d'un client : la **référence**
-     * (votre clé unique), la raison sociale, l'e-mail et le téléphone.
+     * Chaque élément est un tableau :
      *
-     * @return iterable<array{external_ref: string, display_name: string, email: ?string, phone: ?string}>
+     * - `external_ref` — votre clé unique (votre code, votre matricule) ;
+     * - `display_name`, `email`, `phone` — l'identité que le Core attend ;
+     * - **et, sous le nom de chaque clé déclarée**, la valeur que vous
+     *   connaissez déjà (`localisation`, `nom_respo`, `annee_creation`…).
+     *
+     * Sans ces dernières valeurs, le Core ne saurait rien de ces clients :
+     * il les créerait avec la seule identité, et votre application recevrait
+     * des clients à moitié renseignés.
+     *
+     * @return iterable<array<string, mixed>>
      */
     public function tenants(): iterable;
 }

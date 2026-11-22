@@ -265,13 +265,18 @@ Une application qui existait avant le Core a déjà ses locataires — et le Cor
 ne les connaît pas. Il faut qu'il les **reconnaisse**, sans que votre
 application n'écrive jamais un client chez le Core.
 
-Le chemin est celui d'un **import fait par l'opérateur** :
+### Le chemin ordinaire : la console du Core
+
+Depuis la version 1.7 du paquet, **l'opérateur n'a plus rien à faire** :
 
 ```
-1. php artisan core:export-tenants > tenants.csv
-2. L'opérateur importe le fichier dans la console du Core.
-3. Le Core crée les clients et pousse « customer.created ».
-4. Votre application, qui connaît déjà ces locataires, les LIE
+1. Dans la console du Core, il ouvre la page « Application cliente ».
+2. Il clique sur « Créer les clients depuis l'application ».
+3. Le Core vient chercher votre liste (POST /core/tenants), montre un aperçu
+   — combien seront créés, combien sont déjà connus, combien seront refusés —
+   et il clique sur « Confirmer ».
+4. Le Core crée les clients et pousse « customer.created ».
+5. Votre application, qui connaît déjà ces locataires, les LIE
    (trouver() renvoie le locataire, lier() est appelé) au lieu d'en créer
    un second.
 ```
@@ -291,14 +296,36 @@ final class LocatairesAutoEcole implements TenantLister
                 'display_name' => $locataire->nom,
                 'email' => $locataire->email,
                 'phone' => $locataire->telephone,
+                // Et vos valeurs déclarées, sous le nom de vos clés :
+                'localisation' => $locataire->localisation,
             ];
         }
     }
 }
 ```
 
-La commande est **en lecture seule** : elle ne parle pas au Core, ne demande
-aucun droit, ne modifie rien.
+**Les valeurs déclarées comptent.** Sans elles, le Core ne créerait vos
+clients qu'avec l'identité — et votre application recevrait des clients à
+moitié renseignés.
+
+### Le chemin de secours : le fichier
+
+Le fichier reste possible : pour un lot hors bande, ou quand l'application
+est injoignable au moment du branchement.
+
+```
+1. php artisan core:export-tenants > tenants.csv
+2. L'opérateur importe le fichier dans la console du Core.
+```
+
+Le fichier porte **les colonnes de la forme que vous avez déclarée** : la
+référence, les colonnes du Core que votre déclaration ne remplace pas, puis
+vos clés, dans l'ordre de la déclaration. Le Core refuse un fichier dont
+l'en-tête ne porte pas exactement ces colonnes — l'export les écrit donc, à
+votre place.
+
+Les deux chemins aboutissent au **même** endroit : les clients sont créés par
+le Core, poussés, et liés chez vous. Aucun doublon possible dans les deux cas.
 
 ## Lire l'identité d'un client
 
