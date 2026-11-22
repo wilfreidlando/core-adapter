@@ -10,8 +10,9 @@ Le paquet est le client officiel de l'API `/v1` du Core. Il contient :
   d'erreur, la vérification de signature, et une classe par service ;
 - un **adaptateur Laravel** (`CoreAdapter\Laravel`) : le service provider
   (auto-découvert), le transport sur `Illuminate\Http\Client`, le contrôleur de
-  webhook, le middleware, l'événement, l'écouteur et la commande
-  `core:check`.
+  webhook, le middleware, l'événement, l'écouteur, les **deux routes de lecture
+  que le Core vient chercher** (la forme de vos clients, vos clients déjà
+  existants) et la commande `core:check`.
 
 Le noyau n'a **aucune dépendance runtime** : `require` ne contient que `php`.
 L'application Laravel bénéficie de sa propre configuration HTTP ; une
@@ -349,11 +350,25 @@ Sont refusés **localement**, avec un message qui dit quoi faire : les espaces
 
 ### Dire sa forme au Core
 
+**Le chemin ordinaire n'est pas une commande : c'est la console du Core.**
+L'opérateur, depuis la page *« Application cliente »* du projet, clique sur
+**« Récupérer la forme de l'application »** : le Core vient chercher votre
+déclaration (route `GET /core/tenant-schema`), la **valide**, et la présente
+comme une **proposition en attente**. L'opérateur la lit, et l'accepte ou la
+refuse — comme toute proposition.
+
+Vous n'avez donc **rien à écrire** de ce côté, et surtout **rien à faire
+tourner** sur votre serveur. Si votre déclaration a un problème, la console le
+dit — et la proposition **n'est pas enregistrée**.
+
+La commande reste pour une intégration **programmatique** (une CI, un
+déploiement scripté) :
+
 ```bash
 php artisan core:declare-tenant-schema
 ```
 
-La commande lit votre déclaration, la traduit, et la **propose** au Core. Une
+Elle lit votre déclaration, la traduit, et la **propose** au Core. Une
 proposition n'est pas une forme en force : elle attend que l'opérateur la lise
 et l'accepte, dans la console du Core. La commande vous le dit.
 
@@ -375,6 +390,69 @@ $enAttente = $schemas->pending('prj_1');  // la proposition qui attend l'opérat
 
 Cette lecture demande la portée `tenant_schema:read` ; sans elle, `core:check`
 le signale et continue.
+
+### Les clients que l'application a déjà
+
+Votre application existait avant le Core : elle a déjà ses locataires, et le Core
+ne les connaît pas. **Le Core ne peut pas les pousser** — lui donner le droit
+d'écrire un client casserait la garantie « un seul écrivain de l'état
+commercial ».
+
+**Le Core vient donc les chercher** : l'opérateur clique sur **« Créer les
+clients depuis l'application »**, le Core interroge l'application
+(`POST /core/tenants`), affiche un **aperçu** (combien à créer, combien déjà
+connus, combien refusés et pourquoi), puis l'opérateur confirme. Le Core crée
+les clients et les pousse — votre application, qui les connaît déjà, les
+**relie** au lieu d'en créer un second.
+
+Pour cela, votre application implémente `TenantLister` :
+
+```php
+use CoreAdapter\Laravel\Tenant\TenantLister;
+
+final class MonLocataire implements TenantLister
+{
+    /**
+     * Les locataires que l'application a déjà.
+     *
+     * @return iterable<array<string, mixed>>
+     */
+    public function tenants(): iterable
+    {
+        foreach (MonEntite::all() as $entite) {
+            yield [
+                'external_ref' => $entite->code,
+                'display_name' => $entite->nom,
+                'email' => $entite->email,
+                'phone' => $entite->telephone,
+                // Les valeurs déclarées, sous le nom de leur clé.
+                'localisation' => $entite->localisation,
+            ];
+        }
+    }
+}
+```
+
+**Les valeurs déclarées voyagent avec.** Sous le nom de chaque clé déclarée
+(`localisation`, `nom_respo`, `annee_creation`), l'application rend ce qu'elle
+sait déjà. Sans elles, le Core ne saurait rien de ces clients : il les créerait
+avec la seule identité, et l'application recevrait des clients à moitié
+renseignés.
+
+> **Une valeur déclarée garde son type.** Un champ `integer` part en **nombre**
+> (`2019`), pas en date (`"2019-05-04"`) : le Core refuse une valeur d'un autre
+> type, et la ligne est refusée.
+
+**L'export reste le chemin de secours** — quand l'application est injoignable,
+ou pour un lot hors bande :
+
+```bash
+php artisan core:export-tenants > tenants.csv
+```
+
+Le fichier porte alors les colonnes **de la forme déclarée**, et il s'importe
+dans la console du Core comme n'importe quel import. La commande est en
+**lecture seule** : elle ne parle pas au Core et ne demande aucun droit.
 
 ### La fabrique : votre locataire
 
@@ -437,7 +515,12 @@ comme avant.
 $this->app->singleton(MonLocataire::class);
 $this->app->alias(MonLocataire::class, TenantFactory::class);
 $this->app->alias(MonLocataire::class, TenantDeclaration::class);
+$this->app->alias(MonLocataire::class, TenantLister::class);
 ```
+
+La dernière ligne est celle qui permet au Core de venir chercher vos clients
+déjà existants — sans elle, la page *« Application cliente »* le dit, et
+l'opérateur passe par un fichier.
 
 ### Ce que le paquet fait de votre fabrique
 

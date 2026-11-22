@@ -188,7 +188,7 @@ Trois lignes peuvent être jaunes — elles **informent**, sans être des échec
 
 - `! La clé porte la portée « * »` — demandez le modèle « Application cliente » ;
 - `! Votre déclaration de la forme du locataire est en attente d'acceptation dans la console du Core.` — l'opérateur n'a pas encore validé votre [déclaration](locataire.md) ;
-- `! Aucune forme du locataire n'est déclarée au Core` — lancez `php artisan core:declare-tenant-schema`.
+- `! Aucune forme du locataire n'est déclarée au Core` — le Core peut la venir chercher : demandez à l'opérateur de cliquer sur « Récupérer la forme de l'application », ou lancez `php artisan core:declare-tenant-schema`.
 
 La commande sort en code `1` dès qu'un élément **requis** manque.
 
@@ -231,8 +231,8 @@ final readonly class MaCommande
 
 | Vous voulez… | Faites |
 |---|---|
-| Que vos clients existent chez le Core | Demandez à l'opérateur d'importer vos locataires : [Le locataire](locataire.md) |
-| Que le Core collects des informations sur vos clients | [`php artisan core:declare-tenant-schema`](locataire.md#dire-sa-forme-au-core) |
+| Que vos clients existent chez le Core | Le Core vient les chercher : [Le locataire](locataire.md) |
+| Que le Core collecte des informations sur vos clients | L'opérateur clique sur « Récupérer la forme de l'application » : [Le locataire](locataire.md#dire-sa-forme-au-core) |
 | Encaisser | [Paiements](paiements.md) |
 | Réagir aux changements d'abonnement | [Événements](evenements.md) |
 
@@ -240,9 +240,13 @@ final readonly class MaCommande
 
 ```bash
 php artisan core:check          # le branchement tient ?
-php artisan core:export-tenants  # exporter les locataires existants (facultatif)
-php artisan core:declare-tenant-schema   # proposer la forme du locataire
+php artisan core:export-tenants  # exporter les locataires existants (secours)
+php artisan core:declare-tenant-schema   # proposer la forme du locataire (programmatique)
 ```
+
+> Les deux dernières commandes ne sont **plus le parcours ordinaire** : la console
+> du Core sait maintenant venir chercher la forme et les clients tout seule
+> ([locataire.md](locataire.md)).
 
 ## Dépannage
 

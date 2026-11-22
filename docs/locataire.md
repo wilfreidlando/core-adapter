@@ -85,6 +85,15 @@ Le Core ne devine pas votre modèle métier. Votre application **propose** une
 forme — sa clé unique, son motif, ses clés — et **l'opérateur accepte**,
 dans la console du Core.
 
+**Le chemin ordinaire : la console vient la chercher.** L'opérateur, sur la
+page *« Application cliente »* du projet, clique sur **« Récupérer la forme de
+l'application »** : le Core interroge votre application, **valide** sa
+déclaration, et la présente comme une **proposition en attente**. Rien à
+lancer sur votre serveur, rien à copier.
+
+La commande reste pour une intégration **programmatique** (une CI, un
+déploiement scripté) :
+
 ```bash
 php artisan core:declare-tenant-schema
 ```
@@ -274,7 +283,7 @@ Depuis la version 1.7 du paquet, **l'opérateur n'a plus rien à faire** :
 2. Il clique sur « Créer les clients depuis l'application ».
 3. Le Core vient chercher votre liste (POST /core/tenants), montre un aperçu
    — combien seront créés, combien sont déjà connus, combien seront refusés —
-   et il clique sur « Confirmer ».
+   et il clique sur « Créer les clients ».
 4. Le Core crée les clients et pousse « customer.created ».
 5. Votre application, qui connaît déjà ces locataires, les LIE
    (trouver() renvoie le locataire, lier() est appelé) au lieu d'en créer
@@ -307,6 +316,10 @@ final class LocatairesAutoEcole implements TenantLister
 **Les valeurs déclarées comptent.** Sans elles, le Core ne créerait vos
 clients qu'avec l'identité — et votre application recevrait des clients à
 moitié renseignés.
+
+> **Une valeur déclarée garde son type.** Un champ `integer` part en **nombre**
+> (`2019`), pas en date (`"2019-05-04"`) : le Core refuse une valeur d'un autre
+> type, et la ligne est refusée.
 
 ### Le chemin de secours : le fichier
 
